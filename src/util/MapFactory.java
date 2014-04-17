@@ -1,7 +1,7 @@
 package util;
 
-import java.util.*;
 import java.io.Serializable;
+import java.util.*;
 
 /**
  * The MapFactory is a mechanism for specifying what kind of map is to be used
@@ -12,46 +12,46 @@ import java.io.Serializable;
  * @author Dan Klein
  */
 
-public abstract class MapFactory<K,V> implements Serializable {
+public abstract class MapFactory<K, V> implements Serializable {
 
-	private static final long serialVersionUID = 7712239989407912513L;
+    private static final long serialVersionUID = 7712239989407912513L;
 
-	public static class HashMapFactory<K,V> extends MapFactory<K,V> {
-		private static final long serialVersionUID = 2657564834752639043L;
+    public static class HashMapFactory<K, V> extends MapFactory<K, V> {
+        private static final long serialVersionUID = 2657564834752639043L;
 
-		@Override
-		public Map<K, V> buildMap() {
-			return new HashMap<K, V>();
-   }
-  }
-
-  public static class IdentityHashMapFactory<K,V> extends MapFactory<K,V> {
-	private static final long serialVersionUID = 6428508886695719630L;
-
-	@Override
-	public Map<K,V> buildMap() {
-      return new IdentityHashMap<K,V>();
+        @Override
+        public Map<K, V> buildMap() {
+            return new HashMap<K, V>();
+        }
     }
-  }
 
-  public static class TreeMapFactory<K,V> extends MapFactory<K,V> {
-	private static final long serialVersionUID = -1446559074661469861L;
+    public static class IdentityHashMapFactory<K, V> extends MapFactory<K, V> {
+        private static final long serialVersionUID = 6428508886695719630L;
 
-	@Override
-	public Map<K,V> buildMap() {
-      return new TreeMap<K,V>();
+        @Override
+        public Map<K, V> buildMap() {
+            return new IdentityHashMap<K, V>();
+        }
     }
-  }
 
-  public static class WeakHashMapFactory<K,V> extends MapFactory<K,V> {
-	private static final long serialVersionUID = -2364411029136068572L;
+    public static class TreeMapFactory<K, V> extends MapFactory<K, V> {
+        private static final long serialVersionUID = -1446559074661469861L;
 
-	@Override
-	public Map<K,V> buildMap() {
-      return new WeakHashMap<K,V>();
+        @Override
+        public Map<K, V> buildMap() {
+            return new TreeMap<K, V>();
+        }
     }
-  }
 
-  public abstract Map<K,V> buildMap();
+    public static class WeakHashMapFactory<K, V> extends MapFactory<K, V> {
+        private static final long serialVersionUID = -2364411029136068572L;
+
+        @Override
+        public Map<K, V> buildMap() {
+            return new WeakHashMap<K, V>();
+        }
+    }
+
+    public abstract Map<K, V> buildMap();
 }
 

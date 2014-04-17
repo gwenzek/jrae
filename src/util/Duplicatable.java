@@ -1,5 +1,5 @@
 package util;
 
 public interface Duplicatable {
-	public Object copy ();
+    public Object copy();
 }

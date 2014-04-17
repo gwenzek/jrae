@@ -6,9 +6,9 @@ package util;
  * @author Dan Klein
  */
 public class IdentityCounter<E> extends Counter<E> {
-	private static final long serialVersionUID = -6528773644247880481L;
+    private static final long serialVersionUID = -6528773644247880481L;
 
-	public IdentityCounter() {
-    super(new MapFactory.IdentityHashMapFactory<E,Double>());
-  }
+    public IdentityCounter() {
+        super(new MapFactory.IdentityHashMapFactory<E, Double>());
+    }
 }

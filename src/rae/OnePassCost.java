@@ -1,9 +1,9 @@
 package rae;
 
+import math.DifferentiableMatrixFunction;
+
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
-import math.DifferentiableMatrixFunction;
 
 public abstract class OnePassCost {
     double AlphaCat, Beta;
@@ -31,7 +31,7 @@ public abstract class OnePassCost {
         lock = new ReentrantLock();
     }
 
-    protected abstract void CalculateCosts(Theta Theta);
+    protected abstract void calculateCosts(Theta Theta);
 
     public double[] getGradient() {
         return Gradient;

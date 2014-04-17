@@ -1,30 +1,18 @@
 package main;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.PrintStream;
-import java.util.Collection;
-import java.util.List;
-
-import org.jblas.DoubleMatrix;
-
-import math.DifferentiableFunction;
-import math.DifferentiableMatrixFunction;
-import math.Minimizer;
-import math.Norm1Tanh;
-import math.QNMinimizer;
-
 import classify.Accuracy;
 import classify.ClassifierTheta;
 import classify.LabeledDatum;
-
-import classify.SoftmaxClassifier;
-
+import classify.SoftMaxClassifier;
+import math.*;
+import org.jblas.DoubleMatrix;
 import rae.FineTunableTheta;
 import rae.RAECost;
 import rae.RAEFeatureExtractor;
+
+import java.io.*;
+import java.util.Collection;
+import java.util.List;
 
 public class RAEBuilder {
     FineTunableTheta initialTheta;
@@ -65,7 +53,7 @@ public class RAEBuilder {
             List<LabeledDatum<Double, Integer>> classifierTrainingData
                     = fe.extractFeaturesIntoArray(params.Dataset, params.Dataset.Data, params.treeDumpDir);
 
-            SoftmaxClassifier<Double, Integer> classifier = new SoftmaxClassifier<Double, Integer>();
+            SoftMaxClassifier<Double, Integer> classifier = new SoftMaxClassifier<>();
             Accuracy trainAccuracy = classifier.train(classifierTrainingData);
             System.out.println("Train Accuracy :" + trainAccuracy.toString());
 
@@ -94,12 +82,12 @@ public class RAEBuilder {
             FineTunableTheta tunedTheta = rae.loadRAE(params);
             if (params.matrixDumpDir != null) {
                 tunedTheta.dumpAsCSV(params.matrixDumpDir);
-                tunedTheta.dumpWords(params.matrixDumpDir+"/wordsVector.txt", params.matrixDumpDir+"/wordmap.map");
-                System.out.println("Theta dumped to " + params.matrixDumpDir + "/finedTunedTheta.csv");
+                tunedTheta.dumpWords(params.matrixDumpDir + "/wordsVector.txt", params.matrixDumpDir + "/wordmap.map");
+                System.out.println("theta dumped to " + params.matrixDumpDir + "/finedTunedTheta.csv");
             }
             assert tunedTheta.getNumCategories() == params.Dataset.getCatSize();
 
-            SoftmaxClassifier<Double, Integer> classifier = rae.loadClassifier(params);
+            SoftMaxClassifier<Double, Integer> classifier = rae.loadClassifier(params);
 
             RAEFeatureExtractor fe = new RAEFeatureExtractor(
                     params.embeddingSize, tunedTheta, params.AlphaCat,
@@ -179,7 +167,7 @@ public class RAEBuilder {
         Minimizer<DifferentiableFunction> minFunc = new QNMinimizer(10,
                 params.maxIterations);
 
-        double[] minTheta = minFunc.minimize(RAECost, 1e-6, initialTheta.Theta,
+        double[] minTheta = minFunc.minimize(RAECost, 1e-6, initialTheta.theta,
                 params.maxIterations);
 
         tunedTheta = new FineTunableTheta(minTheta, params.hiddenSize,
@@ -200,14 +188,14 @@ public class RAEBuilder {
         return tunedTheta;
     }
 
-    private SoftmaxClassifier<Double, Integer> loadClassifier
+    private SoftMaxClassifier<Double, Integer> loadClassifier
             (Arguments params) throws IOException, ClassNotFoundException {
-        SoftmaxClassifier<Double, Integer> classifier = null;
+        SoftMaxClassifier<Double, Integer> classifier = null;
         FileInputStream fis = new FileInputStream(params.ClassifierFile);
         ObjectInputStream ois = new ObjectInputStream(fis);
         ClassifierTheta ClassifierTheta = (ClassifierTheta) ois.readObject();
         ois.close();
-        classifier = new SoftmaxClassifier<Double, Integer>
+        classifier = new SoftMaxClassifier<Double, Integer>
                 (ClassifierTheta, params.Dataset.getLabelSet());
         return classifier;
     }

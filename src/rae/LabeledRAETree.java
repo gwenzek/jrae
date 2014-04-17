@@ -1,12 +1,12 @@
 package rae;
 
-import org.jblas.*;
-
 import classify.LabeledDatum;
+import org.jblas.DoubleMatrix;
+import util.Pair;
 
-import util.*;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 
 public class LabeledRAETree implements LabeledDatum<Double, Integer> {
     RAENode[] T;
@@ -27,7 +27,7 @@ public class LabeledRAETree implements LabeledDatum<Double, Integer> {
         this(sentenceLength, Label);
         for (int i = 0; i < treeSize; i++) {
             T[i] = new RAENode(i, sentenceLength, hiddenSize, wordsEmbedded);
-            structure.add(new Pair<Integer, Integer>(-1, -1));
+            structure.add(new Pair<>(-1, -1));
         }
     }
 

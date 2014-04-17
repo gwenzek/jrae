@@ -1,21 +1,22 @@
 package main;
 
-import java.util.*;
-import java.io.*;
-
+import classify.Accuracy;
+import classify.LabeledDatum;
+import classify.SoftMaxClassifier;
+import classify.StratifiedCrossValidation;
+import com.jmatio.io.MatFileReader;
+import com.jmatio.types.MLArray;
+import com.jmatio.types.MLDouble;
 import math.*;
-
-import org.jblas.*;
-
+import org.jblas.DoubleMatrix;
 import rae.FineTunableTheta;
 import rae.RAECost;
 import rae.RAEFeatureExtractor;
 
-import classify.*;
-
-import com.jmatio.io.MatFileReader;
-import com.jmatio.types.MLArray;
-import com.jmatio.types.MLDouble;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.util.List;
 
 public class FullRun {
 
@@ -50,7 +51,7 @@ public class FullRun {
                         params.hiddenSize, params.visibleSize, params.Lambda, initialTheta.We, trainingData, null, f);
                 Minimizer<DifferentiableFunction> minFunc = new QNMinimizer(10, params.maxIterations);
 
-                double[] minTheta = minFunc.minimize(RAECost, 1e-6, initialTheta.Theta, params.maxIterations);
+                double[] minTheta = minFunc.minimize(RAECost, 1e-6, initialTheta.theta, params.maxIterations);
                 tunedTheta = new FineTunableTheta(minTheta, params.hiddenSize,
                         params.visibleSize, params.catSize, params.dictionarySize);
             } else {
@@ -82,7 +83,7 @@ public class FullRun {
             List<LabeledDatum<Double, Integer>> classifierTestingData
                     = FeatureExtractor.extractFeaturesIntoArray(testData);
 
-            SoftmaxClassifier<Double, Integer> classifier = new SoftmaxClassifier<Double, Integer>();
+            SoftMaxClassifier<Double, Integer> classifier = new SoftMaxClassifier<Double, Integer>();
 
             Accuracy TrainAccuracy = classifier.train(classifierTrainingData);
             Accuracy TestAccuracy = classifier.test(classifierTestingData);

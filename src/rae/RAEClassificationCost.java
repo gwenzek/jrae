@@ -1,10 +1,11 @@
 package rae;
 
-import math.*;
-import org.jblas.*;
-
-import util.*;
-import classify.*;
+import classify.LabeledDatum;
+import math.DifferentiableMatrixFunction;
+import math.DoubleArrays;
+import org.jblas.DoubleMatrix;
+import util.ArraysHelper;
+import util.DoubleMatrixFunctions;
 
 public class RAEClassificationCost extends OnePassCost {
     int CatSize;
@@ -37,20 +38,20 @@ public class RAEClassificationCost extends OnePassCost {
 
         lock.lock();
         {
-            cost += Tree.TotalScore;
-            num_nodes += Tree.TreeSize;
+            cost += Tree.totalScore;
+            num_nodes += Tree.treeSize;
         }
         lock.unlock();
     }
 
     @Override
     public double getCost() {
-        CalculateCosts(Theta);
+        calculateCosts(Theta);
         return cost;
     }
 
     @Override
-    protected void CalculateCosts(Theta Param) {
+    protected void calculateCosts(Theta Param) {
         FineTunableTheta Theta = (FineTunableTheta) Param;
         double WNormSquared = DoubleMatrixFunctions.SquaredNorm(Theta.W1) + DoubleMatrixFunctions.SquaredNorm(Theta.W2) +
                 DoubleMatrixFunctions.SquaredNorm(Theta.W3) + DoubleMatrixFunctions.SquaredNorm(Theta.W4);
@@ -59,16 +60,16 @@ public class RAEClassificationCost extends OnePassCost {
                 + 0.5 * LambdaL * DoubleMatrixFunctions.SquaredNorm(Theta.We)
                 + 0.5 * LambdaCat * DoubleMatrixFunctions.SquaredNorm(Theta.Wcat);
 
-        /** WNormSquared, DoubleMatrixFunctions.SquaredNorm(Theta.We), DoubleMatrixFunctions.SquaredNorm(Theta.Wcat)); **/
+        /** WNormSquared, DoubleMatrixFunctions.SquaredNorm(theta.We), DoubleMatrixFunctions.SquaredNorm(theta.Wcat)); **/
         DoubleMatrix bcat0 = DoubleMatrix.zeros(CatSize, 1);
         DoubleMatrix b0 = DoubleMatrix.zeros(HiddenSize, 1);
         double[] WeightedGrad = (new FineTunableTheta(Theta.W1.mul(LambdaW), Theta.W2.mul(LambdaW), Theta.W3.mul(LambdaW),
-                Theta.W4.mul(LambdaW), Theta.Wcat.mul(LambdaCat), Theta.We.mul(LambdaL), b0, b0, b0, bcat0)).Theta;
+                Theta.W4.mul(LambdaW), Theta.Wcat.mul(LambdaCat), Theta.We.mul(LambdaL), b0, b0, b0, bcat0)).theta;
 
         double[] CalcGrad = (new FineTunableTheta(Propagator.GW1,
                 Propagator.GW2, Propagator.GW3, Propagator.GW4,
                 Propagator.GWCat, Propagator.GWe_total, Propagator.Gb1,
-                Propagator.Gb2, Propagator.Gb3, Propagator.Gbcat)).Theta;
+                Propagator.Gb2, Propagator.Gb3, Propagator.Gbcat)).theta;
 
         DoubleArrays.scale(CalcGrad, (1.0f / num_nodes));
         Gradient = DoubleArrays.add(CalcGrad, WeightedGrad);

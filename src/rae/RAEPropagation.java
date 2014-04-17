@@ -1,14 +1,15 @@
 package rae;
 
-import math.*;
-
-import org.jblas.*;
-
 import classify.ClassifierTheta;
 import classify.SoftmaxCost;
+import math.DifferentiableMatrixFunction;
+import org.jblas.DoubleMatrix;
+import org.jblas.FloatMatrix;
 import util.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Stack;
 
 public class RAEPropagation
         implements Reducible<RAEPropagation> {
@@ -129,30 +130,30 @@ public class RAEPropagation
 
             // System.out.println(J_min + " " + J_minpos);
 
-            RAENode NewParent = tree.T[SentenceLength + j];
-            NewParent.Y1C1 = Y1C1.getColumn(J_minpos);
-            NewParent.Y2C2 = Y2C2.getColumn(J_minpos);
-            NewParent.DeltaOut1 = f.derivativeAt(Y1.getColumn(J_minpos))
+            RAENode newParent = tree.T[SentenceLength + j];
+            newParent.Y1C1 = Y1C1.getColumn(J_minpos);
+            newParent.Y2C2 = Y2C2.getColumn(J_minpos);
+            newParent.DeltaOut1 = f.derivativeAt(Y1.getColumn(J_minpos))
                     .mmul(Y1C1.getColumn(J_minpos));
-            NewParent.DeltaOut2 = f.derivativeAt(Y2.getColumn(J_minpos))
+            newParent.DeltaOut2 = f.derivativeAt(Y2.getColumn(J_minpos))
                     .mmul(Y2C2.getColumn(J_minpos));
-            NewParent.features = PNorm.getColumn(J_minpos);
-            NewParent.unnormalizedFeatures = P.getColumn(J_minpos);
-            NewParent.scores = new double[]{J_min};
-            tree.TotalScore += J_min;
+            newParent.features = PNorm.getColumn(J_minpos);
+            newParent.unNormalizedFeatures = P.getColumn(J_minpos);
+            newParent.scores = new double[]{J_min};
+            tree.totalScore += J_min;
 
             int LeftChildIndex = CollapsedSentence.get(J_minpos),
                     RightChildIndex = CollapsedSentence.get(J_minpos + 1);
 
             RAENode LeftChild = tree.T[LeftChildIndex], RightChild = tree.T[RightChildIndex];
 
-            NewParent.LeftChild = LeftChild;
-            NewParent.RightChild = RightChild;
-            NewParent.SubtreeSize = LeftChild.SubtreeSize
-                    + RightChild.SubtreeSize;
+            newParent.LeftChild = LeftChild;
+            newParent.RightChild = RightChild;
+            newParent.subtreeSize = LeftChild.subtreeSize
+                    + RightChild.subtreeSize;
 
-            LeftChild.parent = NewParent;
-            RightChild.parent = NewParent;
+            LeftChild.parent = newParent;
+            RightChild.parent = newParent;
             tree.structure.set(SentenceLength + j,
                     new Pair<Integer, Integer>(LeftChildIndex, RightChildIndex));
 
@@ -177,7 +178,7 @@ public class RAEPropagation
                                            int SentenceLength, LabeledRAETree tree) {
         CatSize = theta.Wcat.rows;
         int TreeSize = 2 * SentenceLength - 1;
-//		LabeledRAETree tree = new LabeledRAETree(SentenceLength, CurrentLabel, HiddenSize, CatSize, wordsEmbedded);
+//		LabeledRAETree tree = new LabeledRAETree(sentenceLength, CurrentLabel, HiddenSize, catSize, wordsEmbedded);
         int[] SubtreeSize = new int[TreeSize];
         int[] requiredEntries = ArraysHelper.makeArray(0, CatSize - 1);
 
@@ -207,7 +208,7 @@ public class RAEPropagation
             if (i < SentenceLength) {
                 CurrentNode.scores = Predictions.getColumn(i).data;
                 CurrentNode.catDelta = ErrorGradient.getColumn(i).getRows(requiredEntries);
-                tree.TotalScore += Error.getColumn(i).sum();
+                tree.totalScore += Error.getColumn(i).sum();
             } else {
                 int LeftChild = tree.structure.get(i).getFirst(),
                         RightChild = tree.structure.get(i).getSecond();
@@ -226,7 +227,7 @@ public class RAEPropagation
                 // See last paragraph in Section 2.3
                 DoubleMatrix pNorm1 = p.div(p.norm2());
 
-                CurrentNode.unnormalizedFeatures = p;
+                CurrentNode.unNormalizedFeatures = p;
                 CurrentNode.features = pNorm1;
 
                 Predictions = softmaxCalc.getPredictions(ClassifierTheta, pNorm1);
@@ -238,10 +239,10 @@ public class RAEPropagation
                         .mul((1 - AlphaCat) * Beta)
                         .getRows(requiredEntries);
 
-                tree.TotalScore += ((1 - AlphaCat) * Beta) *
+                tree.totalScore += ((1 - AlphaCat) * Beta) *
                         softmaxCalc.getLoss(Predictions, LabelVector).sum();
 
-                CurrentNode.SubtreeSize = SubtreeSize[i];
+                CurrentNode.subtreeSize = SubtreeSize[i];
             }
         }
         return tree;
@@ -287,7 +288,7 @@ public class RAEPropagation
                 ToPopulate.push(new Triplet<RAENode, Integer, RAENode>(
                         CurrentNode.RightChild, 2, CurrentNode));
 
-                DoubleMatrix A1 = CurrentNode.unnormalizedFeatures, A1Norm = CurrentNode.features;
+                DoubleMatrix A1 = CurrentNode.unNormalizedFeatures, A1Norm = CurrentNode.features;
                 DoubleMatrix ND1 = CurrentNode.DeltaOut1, ND2 = CurrentNode.DeltaOut2;
                 DoubleMatrix PD = CurrentNode.ParentDelta;
 
@@ -354,10 +355,10 @@ public class RAEPropagation
             DoubleMatrix delta = YCSelector[LeftOrRight];
 
             if (!CurrentNode.isLeaf()) {
-                ToPopulate.push(new Triplet<RAENode, Integer, RAENode>(CurrentNode.LeftChild, 1, CurrentNode));
-                ToPopulate.push(new Triplet<RAENode, Integer, RAENode>(CurrentNode.RightChild, 2, CurrentNode));
+                ToPopulate.push(new Triplet<>(CurrentNode.LeftChild, 1, CurrentNode));
+                ToPopulate.push(new Triplet<>(CurrentNode.RightChild, 2, CurrentNode));
 
-                DoubleMatrix A1 = CurrentNode.unnormalizedFeatures, A1Norm = CurrentNode.features;
+                DoubleMatrix A1 = CurrentNode.unNormalizedFeatures, A1Norm = CurrentNode.features;
                 DoubleMatrix ND1 = CurrentNode.DeltaOut1, ND2 = CurrentNode.DeltaOut2;
                 DoubleMatrix PD = CurrentNode.ParentDelta;
 

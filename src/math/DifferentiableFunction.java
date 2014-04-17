@@ -3,5 +3,5 @@ package math;
 /**
  */
 public interface DifferentiableFunction extends Function {
-  double[] derivativeAt(double[] x);
+    double[] derivativeAt(double[] x);
 }

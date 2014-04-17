@@ -1,8 +1,8 @@
 package rae;
 
-import java.io.*;
+import org.jblas.DoubleMatrix;
 
-import org.jblas.*;
+import java.io.Serializable;
 
 /**
  * These classes are made only of the constructors.
@@ -14,7 +14,7 @@ public class Theta implements Serializable {
     DoubleMatrix b1, b2, b3;
 
     //TODO Remove public visibility
-    public double[] Theta;
+    public double[] theta;
     public DoubleMatrix We;
 
     protected double r1, r2;
@@ -59,8 +59,8 @@ public class Theta implements Serializable {
             InitializeMatrices();
         else
             InitializeMatricesToZeros();
-        Theta = new double[getThetaSize()];
-        flatten(Theta);
+        theta = new double[getThetaSize()];
+        flatten(theta);
     }
 
     /**
@@ -83,7 +83,7 @@ public class Theta implements Serializable {
         r1 = orig.r1;
         r2 = orig.r2;
 
-        Theta = orig.Theta.clone();
+        theta = orig.theta.clone();
         W1 = orig.W1.dup();
         W2 = orig.W2.dup();
         W3 = orig.W3.dup();
@@ -95,7 +95,7 @@ public class Theta implements Serializable {
     }
 
     /**
-     * Reconstruct the Theta from theta vector and populate all the W matrices.
+     * Reconstruct the theta from theta vector and populate all the W matrices.
      */
     public Theta(double[] iTheta, int hiddenSize, int visibleSize, int dictionaryLength) {
         this();
@@ -115,8 +115,8 @@ public class Theta implements Serializable {
         b2 = Full.getRowRange(bbegins[1], bends[1] + 1, 0).reshape(visibleSize, 1);
         b3 = Full.getRowRange(bbegins[2], bends[2] + 1, 0).reshape(visibleSize, 1);
 
-        Theta = new double[getThetaSize()];
-        flatten(Theta);
+        theta = new double[getThetaSize()];
+        flatten(theta);
     }
 
     /**
@@ -140,18 +140,18 @@ public class Theta implements Serializable {
         visibleSize = W1.columns;
         dictionaryLength = We.columns;
 
-        Theta = new double[4 * hiddenSize * visibleSize + hiddenSize * dictionaryLength + hiddenSize + 2 * visibleSize];
-        this.flatten(Theta);
+        theta = new double[4 * hiddenSize * visibleSize + hiddenSize * dictionaryLength + hiddenSize + 2 * visibleSize];
+        this.flatten(theta);
     }
 
     /**
-     * Set We, and update the Theta vector,
+     * Set We, and update the theta vector,
      *
      * @param We
      */
     public void setWe(DoubleMatrix We) {
         this.We = We;
-        System.arraycopy(We.toArray(), 0, Theta, Wbegins[4], hiddenSize * dictionaryLength);
+        System.arraycopy(We.toArray(), 0, theta, Wbegins[4], hiddenSize * dictionaryLength);
     }
 
     public int getThetaSize() {

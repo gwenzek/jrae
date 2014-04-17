@@ -1,14 +1,14 @@
 package rae;
 
-import java.util.LinkedList;
-
 import org.jblas.DoubleMatrix;
+
+import java.util.LinkedList;
 
 public class RAENode {
     RAENode parent, LeftChild, RightChild;
-    int NodeName, SubtreeSize;
+    int NodeName, subtreeSize;
     double[] scores; //, Freq;
-    DoubleMatrix unnormalizedFeatures,
+    DoubleMatrix unNormalizedFeatures,
             features, LeafFeatures, Z,
             DeltaOut1, DeltaOut2, ParentDelta,
             catDelta, dW1, dW2, dW3, dW4, dL, Y1C1, Y2C2;
@@ -16,20 +16,20 @@ public class RAENode {
     /**
      * Specialized Constructor for fitting in that list
      *
-     * @param NodeIndex
-     * @param SentenceLength
+     * @param nodeIndex
+     * @param sentenceLength
      * @param HiddenSize
      * @param wordsEmbedded
      */
-    public RAENode(int NodeIndex, int SentenceLength, int HiddenSize, DoubleMatrix wordsEmbedded) {
-        NodeName = NodeIndex;
+    public RAENode(int nodeIndex, int sentenceLength, int HiddenSize, DoubleMatrix wordsEmbedded) {
+        NodeName = nodeIndex;
         parent = LeftChild = RightChild = null;
         scores = null;
 //			Freq = 0;
-        SubtreeSize = 0;
-        if (NodeIndex < SentenceLength) {
-            features = wordsEmbedded.getColumn(NodeIndex);
-            unnormalizedFeatures = wordsEmbedded.getColumn(NodeIndex);
+        subtreeSize = 0;
+        if (nodeIndex < sentenceLength) {
+            features = wordsEmbedded.getColumn(nodeIndex);
+            unNormalizedFeatures = wordsEmbedded.getColumn(nodeIndex);
         }
     }
 
@@ -61,7 +61,7 @@ public class RAENode {
         Y2C2 = DoubleMatrix.zeros(HiddenSize, 1);
         if (NodeIndex >= SentenceLength) {
             features = DoubleMatrix.zeros(HiddenSize, 1);
-            unnormalizedFeatures = DoubleMatrix.zeros(HiddenSize, 1);
+            unNormalizedFeatures = DoubleMatrix.zeros(HiddenSize, 1);
         }
     }
 

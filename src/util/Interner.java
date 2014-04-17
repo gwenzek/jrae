@@ -18,56 +18,56 @@ import java.util.Map;
  *
  * @author Dan Klein
  */
-public class Interner <T> {
-  /**
-   * The source of canonical objects when a non-interned object is presented to
-   * the interner.  The default implementation is an identity map.
-   */
-  public static interface CanonicalFactory <T> {
-    T build(T object);
-  }
-
-  static class IdentityCanonicalFactory <T> implements CanonicalFactory<T> {
-    public T build(T object) {
-      return object;
+public class Interner<T> {
+    /**
+     * The source of canonical objects when a non-interned object is presented to
+     * the interner.  The default implementation is an identity map.
+     */
+    public static interface CanonicalFactory<T> {
+        T build(T object);
     }
-  }
 
-  Map<T, T> canonicalMap;
-  CanonicalFactory<T> cf;
-
-  /**
-   * Returns a canonical representation of the given object.  If the object has
-   * no canonical representation, one is built using the interner's
-   * CanonicalFactory.  The default is that new objects will be their own
-   * canonical instances.
-   *
-   * @param object
-   * @return a canonical representation of that object
-   */
-  public T intern(T object) {
-    T canonical = canonicalMap.get(object);
-    if (canonical == null) {
-      canonical = cf.build(object);
-      canonicalMap.put(canonical, canonical);
+    static class IdentityCanonicalFactory<T> implements CanonicalFactory<T> {
+        public T build(T object) {
+            return object;
+        }
     }
-    return canonical;
-  }
 
-  public Interner() {
-    this(new MapFactory.HashMapFactory<T,T>(), new IdentityCanonicalFactory<T>());
-  }
+    Map<T, T> canonicalMap;
+    CanonicalFactory<T> cf;
 
-  public Interner(MapFactory<T,T> mf) {
-    this(mf, new IdentityCanonicalFactory<T>());
-  }
+    /**
+     * Returns a canonical representation of the given object.  If the object has
+     * no canonical representation, one is built using the interner's
+     * CanonicalFactory.  The default is that new objects will be their own
+     * canonical instances.
+     *
+     * @param object
+     * @return a canonical representation of that object
+     */
+    public T intern(T object) {
+        T canonical = canonicalMap.get(object);
+        if (canonical == null) {
+            canonical = cf.build(object);
+            canonicalMap.put(canonical, canonical);
+        }
+        return canonical;
+    }
 
-  public Interner(CanonicalFactory<T> f) {
-    this(new MapFactory.HashMapFactory<T,T>(), f);
-  }
+    public Interner() {
+        this(new MapFactory.HashMapFactory<T, T>(), new IdentityCanonicalFactory<T>());
+    }
 
-  public Interner(MapFactory<T,T> mf, CanonicalFactory<T> cf) {
-    canonicalMap = mf.buildMap();
-    this.cf = cf;
-  }
+    public Interner(MapFactory<T, T> mf) {
+        this(mf, new IdentityCanonicalFactory<T>());
+    }
+
+    public Interner(CanonicalFactory<T> f) {
+        this(new MapFactory.HashMapFactory<T, T>(), f);
+    }
+
+    public Interner(MapFactory<T, T> mf, CanonicalFactory<T> cf) {
+        canonicalMap = mf.buildMap();
+        this.cf = cf;
+    }
 }

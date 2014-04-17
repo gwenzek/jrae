@@ -1,16 +1,15 @@
 package rae;
 
-import org.jblas.*;
+import classify.ClassifierTheta;
+import org.jblas.DoubleMatrix;
 
 import java.io.*;
 import java.util.Scanner;
 
-import classify.ClassifierTheta;
-
 public class FineTunableTheta extends Theta {
 
     DoubleMatrix Wcat, bcat;
-    int CatSize;
+    int catSize;
     private static final long serialVersionUID = 752647956355547L;
 
     public FineTunableTheta(double[] iTheta, int hiddenSize, int visibleSize, int CatSize, int dictionaryLength) {
@@ -18,7 +17,7 @@ public class FineTunableTheta extends Theta {
         this.hiddenSize = hiddenSize;
         this.visibleSize = visibleSize;
         this.dictionaryLength = dictionaryLength;
-        this.CatSize = CatSize;
+        this.catSize = CatSize;
         fixIndices();
         DoubleMatrix Full = new DoubleMatrix(iTheta);
 
@@ -36,13 +35,13 @@ public class FineTunableTheta extends Theta {
         Wcat = Full.getRowRange(Wbegins[5], Wends[5] + 1, 0).reshape(CatSize, hiddenSize);
         bcat = Full.getRowRange(bbegins[5], bends[5] + 1, 0).reshape(CatSize, 1);
 
-        Theta = new double[getThetaSize()];
-        flatten(Theta);
+        theta = new double[getThetaSize()];
+        flatten(theta);
     }
 
     public FineTunableTheta(FineTunableTheta orig) {
         super(orig);
-        CatSize = orig.CatSize;
+        catSize = orig.catSize;
         Wcat = orig.Wcat.dup();
         bcat = orig.bcat.dup();
     }
@@ -50,13 +49,13 @@ public class FineTunableTheta extends Theta {
     public FineTunableTheta(int hiddenSize, int visibleSize, int catSize, int dictionaryLength, boolean random) {
         super(hiddenSize, visibleSize, catSize, dictionaryLength);
 
-        this.CatSize = catSize;
+        this.catSize = catSize;
         if (random)
             InitializeMatrices();
         else
             InitializeMatricesToZeros();
-        Theta = new double[this.getThetaSize()];
-        flatten(Theta);
+        theta = new double[this.getThetaSize()];
+        flatten(theta);
     }
 
     /**
@@ -80,10 +79,10 @@ public class FineTunableTheta extends Theta {
         hiddenSize = W1.rows;
         visibleSize = W1.columns;
         dictionaryLength = We.columns;
-        CatSize = bcat.rows;
+        catSize = bcat.rows;
 
-        Theta = new double[getThetaSize()];
-        flatten(Theta);
+        theta = new double[getThetaSize()];
+        flatten(theta);
     }
 
     public void dump(String FileName) throws IOException {
@@ -97,11 +96,11 @@ public class FineTunableTheta extends Theta {
     @Override
     public int getThetaSize() {
         return 4 * hiddenSize * visibleSize + hiddenSize * dictionaryLength
-                + hiddenSize + 2 * visibleSize + CatSize * hiddenSize + CatSize;
+                + hiddenSize + 2 * visibleSize + catSize * hiddenSize + catSize;
     }
 
     public int getNumCategories() {
-        return CatSize + 1;
+        return catSize + 1;
     }
 
     public ClassifierTheta getClassifierParameters() {
@@ -111,32 +110,32 @@ public class FineTunableTheta extends Theta {
     @Override
     protected void InitializeMatrices() {
         super.InitializeMatrices();
-        Wcat = (DoubleMatrix.rand(CatSize, hiddenSize).muli(2 * r1)).subi(r1);
-        bcat = DoubleMatrix.zeros(CatSize, 1);
+        Wcat = (DoubleMatrix.rand(catSize, hiddenSize).muli(2 * r1)).subi(r1);
+        bcat = DoubleMatrix.zeros(catSize, 1);
     }
 
     @Override
     protected void InitializeMatricesToZeros() {
         super.InitializeMatricesToZeros();
-        Wcat = DoubleMatrix.zeros(CatSize, hiddenSize);
-        bcat = DoubleMatrix.zeros(CatSize, 1);
+        Wcat = DoubleMatrix.zeros(catSize, hiddenSize);
+        bcat = DoubleMatrix.zeros(catSize, 1);
     }
 
     @Override
     protected void flatten(double[] Theta) {
         fixIndices();
         super.flatten(Theta);
-        System.arraycopy(Wcat.toArray(), 0, Theta, Wbegins[5], CatSize * hiddenSize);
-        System.arraycopy(bcat.toArray(), 0, Theta, bbegins[5], CatSize);
+        System.arraycopy(Wcat.toArray(), 0, Theta, Wbegins[5], catSize * hiddenSize);
+        System.arraycopy(bcat.toArray(), 0, Theta, bbegins[5], catSize);
     }
 
     @Override
     protected void fixIndices() {
         super.fixIndices();
         Wbegins[5] = bends[2] + 1;
-        Wends[5] = Wbegins[5] + CatSize * hiddenSize - 1;    //Wcat
+        Wends[5] = Wbegins[5] + catSize * hiddenSize - 1;    //Wcat
         bbegins[5] = Wends[5] + 1;
-        bends[5] = bbegins[5] + CatSize - 1;                //bcat
+        bends[5] = bbegins[5] + catSize - 1;                //bcat
 
 //		for(int i=0; i<=5; i++)
 //			System.out.println (Wbegins[i] + " " + Wends[i]);
@@ -213,9 +212,6 @@ public class FineTunableTheta extends Theta {
                 index = wordMap.nextInt();
                 out.write(word+" ");
                 vector = We.getColumn(index).data;
-                //TODO remove this warning
-                if(vector.length>100)
-                    System.err.println("read column instead of line");
                 for(double d : vector)
                     out.write(""+d+" ");
                 out.write("\n");

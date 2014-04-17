@@ -1,13 +1,17 @@
 package rae;
 
-import java.util.*;
-import java.util.concurrent.locks.*;
+import classify.LabeledDatum;
+import math.DifferentiableMatrixFunction;
+import math.DoubleArrays;
+import org.jblas.DoubleMatrix;
+import org.jblas.FloatMatrix;
+import parallel.ThreadPool;
+import util.ArraysHelper;
+import util.DoubleMatrixFunctions;
 
-import math.*;
-import org.jblas.*;
-import util.*;
-import classify.*;
-import parallel.*;
+import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class RAECostComputer {
     double AlphaCat, Beta;
@@ -72,8 +76,8 @@ public class RAECostComputer {
 
                         lock.lock();
                         {
-                            cost += tree.TotalScore;
-                            num_nodes += tree.TreeSize;
+                            cost += tree.totalScore;
+                            num_nodes += tree.treeSize;
                         }
                         lock.unlock();
 
@@ -121,7 +125,7 @@ public class RAECostComputer {
                         lock.lock();
                         {
                             AllTrees[index] = tree;
-                            cost += tree.TotalScore;
+                            cost += tree.totalScore;
                             num_nodes += SentenceLength;
                         }
                         lock.unlock();
@@ -154,13 +158,13 @@ public class RAECostComputer {
 
         double[] CalcGrad = (new Theta(Propagator.GW1, Propagator.GW2,
                 Propagator.GW3, Propagator.GW4, Propagator.GWe_total,
-                Propagator.Gb1, Propagator.Gb2, Propagator.Gb3)).Theta;
+                Propagator.Gb1, Propagator.Gb2, Propagator.Gb3)).theta;
 
         DoubleMatrix b0 = DoubleMatrix.zeros(HiddenSize, 1);
         double[] WeightedGrad = (new Theta(
                 Theta.W1.mul(LambdaW), Theta.W2.mul(LambdaW),
                 Theta.W3.mul(LambdaW), Theta.W4.mul(LambdaW),
-                Theta.We.mul(LambdaL), b0, b0, b0)).Theta;
+                Theta.We.mul(LambdaL), b0, b0, b0)).theta;
 
         DoubleArrays.scale(CalcGrad, (1.0f / num_nodes));
         Gradient = DoubleArrays.add(CalcGrad, WeightedGrad);
@@ -174,16 +178,16 @@ public class RAECostComputer {
                 + 0.5 * LambdaL * DoubleMatrixFunctions.SquaredNorm(Theta.We)
                 + 0.5 * LambdaCat * DoubleMatrixFunctions.SquaredNorm(Theta.Wcat);
 
-        /** WNormSquared, DoubleMatrixFunctions.SquaredNorm(Theta.We), DoubleMatrixFunctions.SquaredNorm(Theta.Wcat)); **/
+        /** WNormSquared, DoubleMatrixFunctions.SquaredNorm(theta.We), DoubleMatrixFunctions.SquaredNorm(theta.Wcat)); **/
         DoubleMatrix bcat0 = DoubleMatrix.zeros(CatSize, 1);
         DoubleMatrix b0 = DoubleMatrix.zeros(HiddenSize, 1);
         double[] WeightedGrad = (new FineTunableTheta(Theta.W1.mul(LambdaW), Theta.W2.mul(LambdaW), Theta.W3.mul(LambdaW),
-                Theta.W4.mul(LambdaW), Theta.Wcat.mul(LambdaCat), Theta.We.mul(LambdaL), b0, b0, b0, bcat0)).Theta;
+                Theta.W4.mul(LambdaW), Theta.Wcat.mul(LambdaCat), Theta.We.mul(LambdaL), b0, b0, b0, bcat0)).theta;
 
         double[] CalcGrad = (new FineTunableTheta(Propagator.GW1,
                 Propagator.GW2, Propagator.GW3, Propagator.GW4,
                 Propagator.GWCat, Propagator.GWe_total, Propagator.Gb1,
-                Propagator.Gb2, Propagator.Gb3, Propagator.Gbcat)).Theta;
+                Propagator.Gb2, Propagator.Gb3, Propagator.Gbcat)).theta;
 
         DoubleArrays.scale(CalcGrad, (1.0f / num_nodes));
         Gradient = DoubleArrays.add(CalcGrad, WeightedGrad);
