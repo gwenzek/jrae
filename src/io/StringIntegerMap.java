@@ -7,8 +7,6 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.FileOutputStream;
 import java.util.HashMap;
 
 public abstract class StringIntegerMap extends HashMap<String,Integer> 
@@ -50,8 +48,7 @@ public abstract class StringIntegerMap extends HashMap<String,Integer>
 		try {
 			// Create file
 			FileWriter fstream = new FileWriter(fileName);
-			BufferedWriter out = new BufferedWriter(new OutputStreamWriter(
-													new FileOutputStream(fileName),"UTF-8"));
+			BufferedWriter out = new BufferedWriter(fstream);
 
 			for (String word : keySet())
 				out.write(word + " " + get(word) + "\n");

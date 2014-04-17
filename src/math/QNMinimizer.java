@@ -76,15 +76,14 @@ import java.util.List;
 
 public class QNMinimizer implements Minimizer<DifferentiableFunction> {
 
-	private int fevals = 0; // the number of function evaluations
-	private int maxFevals = -1;
+	private int fEvals = 0; // the number of function evaluations
+	private int maxFEvals = -1;
 	private int mem = 10; // the number of s,y pairs to retain for BFGS
 	private int its = 0; // the number of iterations
 	private Function monitor = null;
 	private boolean quiet;
 	private static final NumberFormat nf = new DecimalFormat("0.000E0");
-	private static final NumberFormat nfsec = new DecimalFormat("0.00"); // for
-																			// times
+	private static final NumberFormat nfsec = new DecimalFormat("0.00"); // for times
 	private static final double ftol = 1e-4; // Linesearch parameters
 	private double gtol = 0.9;
 	private static final double aMin = 1e-12; // Min step size
@@ -127,7 +126,7 @@ public class QNMinimizer implements Minimizer<DifferentiableFunction> {
 
 	public QNMinimizer(int m, int maxFEvals) {
 		mem = m;
-		maxFevals = maxFEvals;
+		this.maxFEvals = maxFEvals;
 	}
 
 	public QNMinimizer(int m, boolean useRobustOptions) {
@@ -214,9 +213,6 @@ public class QNMinimizer implements Minimizer<DifferentiableFunction> {
 	}
 
 	public static class SurpriseConvergence extends Throwable {
-		/**
-     *
-     */
 		private static final long serialVersionUID = 4290178321643529559L;
 
 		public SurpriseConvergence(String s) {
@@ -225,9 +221,6 @@ public class QNMinimizer implements Minimizer<DifferentiableFunction> {
 	}
 
 	private static class MaxEvaluationsExceeded extends Throwable {
-		/**
-     *
-     */
 		private static final long serialVersionUID = 8044806163343218660L;
 
 		public MaxEvaluationsExceeded(String s) {
@@ -832,7 +825,7 @@ public class QNMinimizer implements Minimizer<DifferentiableFunction> {
 		double[] x, newX, grad, newGrad, dir;
 		double value;
 		its = 0;
-		fevals = 0;
+		fEvals = 0;
 		success = false;
 
 		qn.scaleOpt = scaleOpt;
@@ -877,7 +870,7 @@ public class QNMinimizer implements Minimizer<DifferentiableFunction> {
 		rec.start(value, grad, x);
 
 		// Check if max Evaluations and Iterations have been provided.
-		maxFevals = (maxFunctionEvaluations > 0) ? maxFunctionEvaluations
+		maxFEvals = (maxFunctionEvaluations > 0) ? maxFunctionEvaluations
 				: Integer.MAX_VALUE;
 		// maxIterations = (maxIterations > 0) ? maxIterations :
 		// Integer.MAX_VALUE;
@@ -914,7 +907,7 @@ public class QNMinimizer implements Minimizer<DifferentiableFunction> {
 				its += 1;
 				double newValue;
 				double[] newPoint = new double[3]; // initialized in loop
-				say("Iter " + its + " evals " + fevals + " ");
+				say("Iter " + its + " evals " + fEvals + " ");
 				
 				// Compute the search direction
 				say("<");
@@ -973,7 +966,7 @@ public class QNMinimizer implements Minimizer<DifferentiableFunction> {
 				// Add the current value and gradient to the records, this also
 				// monitors
 				// X and writes to output
-				rec.add(newValue, newGrad, newX, fevals);
+				rec.add(newValue, newGrad, newX, fEvals);
 
 				// shift
 				value = newValue;
@@ -986,7 +979,7 @@ public class QNMinimizer implements Minimizer<DifferentiableFunction> {
 				if (quiet) {
 					System.err.print(".");
 				}
-				if (fevals > maxFevals) {
+				if (fEvals > maxFEvals) {
 					throw new MaxEvaluationsExceeded(
 							" Exceeded in minimize() loop ");
 				}
@@ -1051,7 +1044,7 @@ public class QNMinimizer implements Minimizer<DifferentiableFunction> {
 
 		if (outputToFile) {
 			infoFile.println(completionTime + "; Total Time ");
-			infoFile.println(fevals + "; Total evaluations");
+			infoFile.println(fEvals + "; Total evaluations");
 			infoFile.close();
 			outFile.close();
 		}
@@ -1083,7 +1076,7 @@ public class QNMinimizer implements Minimizer<DifferentiableFunction> {
 			double[] grad) {
 		double cost = dfunc.valueAt(x);
 		System.arraycopy(dfunc.derivativeAt(x), 0, grad, 0, grad.length);
-		fevals += 1;
+		fEvals += 1;
 		return cost;
 	}
 
@@ -1127,7 +1120,7 @@ public class QNMinimizer implements Minimizer<DifferentiableFunction> {
 
 		while ((newPoint[f] = func.valueAt((plusAndConstMult(x, dir, step, newX)))) 
 										> lastValue + c * step) {
-			fevals += 1;
+			fEvals += 1;
 			if (newPoint[f] < lastValue) {
 				// an improvement, but not good enough... suspicious!
 				say("!");
@@ -1138,8 +1131,8 @@ public class QNMinimizer implements Minimizer<DifferentiableFunction> {
 		}
 
 		newPoint[a] = step;
-		fevals += 1;
-		if (fevals > maxFevals) {
+		fEvals += 1;
+		if (fEvals > maxFEvals) {
 			throw new MaxEvaluationsExceeded(
 					" Exceeded during linesearch() Function ");
 		}
@@ -1213,7 +1206,7 @@ public class QNMinimizer implements Minimizer<DifferentiableFunction> {
 			// Use the best point if we have some sort of strange termination
 			// conditions.
 			if ((bracketed && (newPt[a] <= stpMin || newPt[a] >= stpMax))
-					|| fevals >= maxFevals || infoc == 0
+					|| fEvals >= maxFEvals || infoc == 0
 					|| (bracketed && stpMax - stpMin <= tol * stpMax)) {
 				// todo: below..
 				plusAndConstMult(x, dir, bestPt[a], newX);
@@ -1224,7 +1217,7 @@ public class QNMinimizer implements Minimizer<DifferentiableFunction> {
 			newPt[f] = dfunc.valueAt((plusAndConstMult(x, dir, newPt[a], newX)));
 			newPt[g] = ArrayMath.innerProduct(dfunc.derivativeAt(newX), dir);
 			double fTest = f0 + newPt[a] * gTest;
-			fevals += 1;
+			fEvals += 1;
 
 			// Check and make sure everything is normal.
 			if ((bracketed && (newPt[a] <= stpMin || newPt[a] >= stpMax))
@@ -1240,10 +1233,10 @@ public class QNMinimizer implements Minimizer<DifferentiableFunction> {
 				info = 4;
 				say(" line search failure: minimum step length reached ");
 			}
-			if (fevals >= maxFevals) {
+			if (fEvals >= maxFEvals) {
 				info = 3;
 				throw new MaxEvaluationsExceeded(
-						" Exceeded during linesearchMinPack() Function ");
+						" Exceeded during linesearchMinPack() function ");
 			}
 			if (bracketed && stpMax - stpMin <= tol * stpMax) {
 				info = 2;

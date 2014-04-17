@@ -4,11 +4,6 @@ import java.io.*;
 import java.util.*;
 import edu.stanford.nlp.ie.machinereading.domains.ace.reader.*;
 import edu.stanford.nlp.ling.Word;
-import edu.stanford.nlp.ling.CoreLabel;
-import edu.stanford.nlp.ling.HasWord;
-import edu.stanford.nlp.process.DocumentPreprocessor;
-import edu.stanford.nlp.process.PTBTokenizer;
-import edu.stanford.nlp.process.WordTokenFactory;
 
 import classify.Datum;
 import classify.LabeledDatum;
@@ -160,21 +155,13 @@ public class ParsedReviewData extends LabeledDataSet<LabeledDatum<Integer,Intege
 	{
 		assert Label != ReviewDatum.UnknownLabel;
 		
-		BufferedReader inBr = new BufferedReader(new InputStreamReader(
-    new FileInputStream(FileName), "UTF-8"));
+		BufferedReader inBr = new BufferedReader(new FileReader(FileName));
 		int iCountLines = 0;
 		String sLine;
-		PTBTokenizer ptbt;
 		while ((sLine = inBr.readLine())!=null) {
 			sLine = sLine.trim();
-			 ptbt = new PTBTokenizer(new StringReader(sLine), new WordTokenFactory(), "");
-			// tokenizer = new RobustTokenizer<Word>(sLine);
-			List<Word> list = ptbt.tokenize();
-			// for (Word word : list){
-			// 	System.out.println("Word" + word.word());
-			// }
-
-			Word[] words = list.toArray(new Word[list.size()]);
+			tokenizer = new RobustTokenizer<Word>(sLine);
+			Word[] words = tokenizer.tokenizeToWords();
 			
 			if (words == null || words.length == 0)
 				continue;
@@ -192,24 +179,14 @@ public class ParsedReviewData extends LabeledDataSet<LabeledDatum<Integer,Intege
 	
 	private void LoadTestFile(String FileName, int Label) throws IOException
 	{
-		BufferedReader inBr = new BufferedReader(new InputStreamReader(
-													new FileInputStream(FileName), "UTF-8"));
-   		int iCountLines = 0;
+		BufferedReader inBr = new BufferedReader(new FileReader(FileName));
+		int iCountLines = 0;
 		String sLine;
-		PTBTokenizer ptbt;
-
 		while ((sLine = inBr.readLine())!=null) {
 			sLine = sLine.trim();
 			sLine = sLine.trim();
-
-			ptbt = new PTBTokenizer(new StringReader(sLine), new WordTokenFactory(), "");
-			
-			// Alternatively, could use robust tokenizer for English or some other tokenizer
-			// for languages with scripts like Chinese or Arabic
-			// tokenizer = new RobustTokenizer<Word>(sLine);
-			List<Word> list = ptbt.tokenize();
-
-			Word[] words = list.toArray(new Word[list.size()]);
+			tokenizer = new RobustTokenizer<Word>(sLine);
+			Word[] words = tokenizer.tokenizeToWords();
 			
 			if (words == null || words.length == 0)
 				continue;

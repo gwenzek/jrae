@@ -9,7 +9,6 @@ import math.*;
 import org.jblas.*;
 
 import util.Counter;
-import util.DoubleMatrixFunctions;
 
 /**
  * TODO Make it more generic later
@@ -25,13 +24,13 @@ public class SoftmaxClassifier<F,L>
 	private final double Lambda = 1e-6;
 	private Counter<L> LabelSet;
 	private DoubleMatrix trainScores, testScores;
-	private SoftmaxCost CostFunction;
+	private SoftmaxCost costFunction;
 	int CatSize;
 	
 	ClassifierTheta ClassifierTheta;
 	Minimizer<DifferentiableFunction> minFunc;
 	
-	Accuracy TrainAccuracy, TestAccuracy;
+	Accuracy trainAccuracy, testAccuracy;
 	
 	public SoftmaxClassifier( )
 	{
@@ -59,14 +58,14 @@ public class SoftmaxClassifier<F,L>
 		int FeatureLength = Features.rows;
 		
 		int[] Labels = makeLabelVector(Data);
-		CostFunction = new SoftmaxCost(Features,Labels,CatSize,Lambda);
+		costFunction = new SoftmaxCost(Features,Labels,CatSize,Lambda);
 		
 		ClassifierTheta = new ClassifierTheta(FeatureLength,CatSize);
 		double[] InitialTheta = ClassifierTheta.Theta;
 		
-		double[] OptimalTheta = minFunc.minimize(CostFunction, 1e-6, InitialTheta);
+		double[] OptimalTheta = minFunc.minimize(costFunction, 1e-6, InitialTheta);
 		ClassifierTheta = new ClassifierTheta(OptimalTheta,FeatureLength,CatSize);
-		return CostFunction.getPredictions(ClassifierTheta, Features);
+		return costFunction.getPredictions(ClassifierTheta, Features);
 	}
 	
 	public Accuracy train(List<LabeledDatum<F,L>> Data)
@@ -74,20 +73,19 @@ public class SoftmaxClassifier<F,L>
 		trainScores = getTrainingResults(Data);
 		int[] GTLabels = makeLabelVector(Data);
 		int[] Predictions = trainScores.columnArgmaxs();
-		TrainAccuracy = new Accuracy(Predictions, GTLabels, CatSize);
-		return TrainAccuracy;
+		trainAccuracy = new Accuracy(Predictions, GTLabels, CatSize);
+		return trainAccuracy;
 	}
 	
 	public Accuracy test(List<LabeledDatum<F,L>> Data)
 	{
 		DoubleMatrix Features = makeFeatureMatrix(Data);
-		DoubleMatrixFunctions.prettyPrint(Features);
 		int[] Labels = makeLabelVector(Data);
-		CostFunction = new SoftmaxCost (CatSize, ClassifierTheta.FeatureLength, Lambda);
-		testScores = CostFunction.getPredictions(ClassifierTheta,Features);
+		costFunction = new SoftmaxCost (CatSize, ClassifierTheta.FeatureLength, Lambda);
+		testScores = costFunction.getPredictions(ClassifierTheta,Features);
 		int[] Predictions = testScores.columnArgmaxs();
-		TestAccuracy = new Accuracy(Predictions,Labels,CatSize);
-		return TestAccuracy;
+		testAccuracy = new Accuracy(Predictions,Labels,CatSize);
+		return testAccuracy;
 	}
 	
 	public DoubleMatrix getTrainScores()
@@ -169,10 +167,10 @@ public class SoftmaxClassifier<F,L>
 			i++;
 		}
 		
-		if (CostFunction == null)
-			CostFunction = new SoftmaxCost (CatSize, ClassifierTheta.FeatureLength, Lambda);
+		if (costFunction == null)
+			costFunction = new SoftmaxCost (CatSize, ClassifierTheta.FeatureLength, Lambda);
 		
-		DoubleMatrix Scores = CostFunction.getPredictions(ClassifierTheta, Features);
+		DoubleMatrix Scores = costFunction.getPredictions(ClassifierTheta, Features);
 		
 		for(L label : LabelSet.keySet())
 		{
@@ -194,7 +192,7 @@ public class SoftmaxClassifier<F,L>
 		return logProbablities;
 	}
 	
-	public void Dump (String fileName) throws IOException{
+	public void dump(String fileName) throws IOException{
 		FileOutputStream fos = new FileOutputStream(fileName);
 		ObjectOutputStream oos = new ObjectOutputStream(fos);
 		oos.writeObject(ClassifierTheta);
